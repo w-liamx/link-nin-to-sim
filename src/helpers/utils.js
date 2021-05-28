@@ -31,3 +31,9 @@ export const responseObject = (
       data: data,
     });
 };
+
+// Returns true if argument is a positive integer
+export const validateAmount = (num) => {
+  if (!num) return false;
+  return Number.isInteger(Number(num)) && Number(num) > 0;
+};

@@ -15,6 +15,10 @@ import {
   registerSim,
   updateSimCardRegistration,
 } from "../controllers/simCardRegistration.js";
+import {
+  getSystemSettings,
+  updateSystemSettings,
+} from "../controllers/systemSettings.js";
 
 const router = express.Router();
 
@@ -62,5 +66,8 @@ router.get("/citizens", getAllCitizens);
 
 router.post("/phone-to-nin", linkPhoneToNin);
 router.get("/reports", getRequestReports);
+
+router.put("/update-system-settings", updateSystemSettings);
+router.get("/system-settings", getSystemSettings);
 
 export default router;
