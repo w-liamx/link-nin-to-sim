@@ -78,7 +78,3 @@ _This repository contains a mock up Nodejs Project that implements APIs for link
 ## Copyright and attribution
 
 Copyright (c) 2021. Released under the [MIT License](https://github.com/datamade/your-repo-here/blob/master/LICENSE).
-
-```
-
-```
