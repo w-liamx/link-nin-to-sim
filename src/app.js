@@ -2,7 +2,7 @@ import express from "express";
 import logger from "morgan";
 import cors from "cors";
 
-import appRoutes from "./src/routes/base.js";
+import appRoutes from "./routes/base.js";
 
 const app = express();
 
