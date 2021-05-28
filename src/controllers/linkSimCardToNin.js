@@ -2,8 +2,10 @@ import db from "../models/index.js";
 import { responseObject } from "../helpers/utils.js";
 
 const SimRegistration = db.SimRegistration;
+const Wallet = db.Wallet;
 const Citizen = db.CitizensNin;
 const RequestReport = db.RequestsReport;
+const SystemSettings = db.SystemSetting;
 
 const reportRemarks = [
   "Successful",
@@ -11,6 +13,7 @@ const reportRemarks = [
   "Invalid NIN",
   "Invalid Phone Number and NIN",
   "Insufficient Fund",
+  "Redundant Request",
 ];
 
 export const linkPhoneToNin = async (req, res) => {
@@ -18,10 +21,10 @@ export const linkPhoneToNin = async (req, res) => {
     const { phoneNumber, nin } = req.body;
 
     /**
-     * User Must Provide A Valid Phone Number
+     *To successfully link NIN to Phone Number, User Must Provide A Valid Phone Number
      * Assuming we have access to Users sim card registration records/database...
      * Here, we check the phone Number provided by the user in the sim registration database
-     * to make sure that the user has provided a valid sim card.
+     * to make sure that the user has provided a valid sim card number.
      *
      * User Must Provide A Valid NIN
      * Also assuming we have access to Users NIN registrations records/database...
@@ -29,17 +32,43 @@ export const linkPhoneToNin = async (req, res) => {
      * make sure that the user has provided a valid NIN
      *
      * If the two conditions above are met,
-     * Assuming we have a wallet system, and the default currency is Naira,
+     * We assume we have a wallet system, and the default currency is Naira,
      * Since it is mandatory to charge each user N500 (or #amount specified in database) per request
-     * we have to check it the user's wallet balance is enough to bear the charges for his/her request.
+     * we have to check if the user's wallet balance is enough to bear the charges for his/her request.
      *
      * If all conditions are met,
      * We establish a link between the specified phone number and NIN
      */
 
+    if (!phoneNumber || !nin)
+      return responseObject(
+        res,
+        400,
+        "error",
+        null,
+        "Both fields are required! Please provide your phone number and NIN."
+      );
     const sim = await SimRegistration.findOne({
       where: { phoneNumber },
     });
+
+    // Return response messages if phone number is already linked to NIN
+    if (sim && sim.nin) {
+      await RequestReport.create({
+        nin,
+        phoneNumber,
+        status: "fail",
+        amountBilled: 0,
+        remark: reportRemarks[5],
+      });
+      return responseObject(
+        res,
+        403,
+        "error",
+        null,
+        "This Phone number has already been Linked to an NIN. Please contact support if you did not do this."
+      );
+    }
 
     // Fetch citizen's record and LEFT JOIN wallet
     const citizen = await Citizen.findOne({
@@ -67,8 +96,7 @@ export const linkPhoneToNin = async (req, res) => {
         400,
         "error",
         null,
-        "Please provide a valid Phone number and NIN. If you are not sure, you can obtain your phone \
-        number from your service provider, and your NIN from the NIN database"
+        "Please provide a valid Phone number and NIN. If you have forgotten or lost them, kindly obtain your phone number from your service provider, and your NIN from the NIN database"
       );
     } else if (!sim && citizen) {
       await RequestReport.create({
@@ -98,50 +126,66 @@ export const linkPhoneToNin = async (req, res) => {
         400,
         "error",
         null,
-        "You have provided an Invalid NIN. This may be due to a typographical error or you have not registered for NIN. \
-        Please confirm that your NIN is correct by searching in the NIN database."
+        "You have provided an Invalid NIN. This may be due to a typographical error or that you have not registered for NIN. Please confirm that your NIN is correct by searching in the NIN database."
       );
     }
 
-    // Get the current charge per request
+    // Get the current charge per request. Use default of N500 if setting is not found.
     const chargeSetting = await SystemSettings.findOne({
       where: { key: "chargePerRequest" },
     });
-    const currentChargePerRequest = chargeSetting.value;
+    const currentChargePerRequest = chargeSetting.value || 500;
 
     // check if user has a wallet and has enough balance for this request
-    if (citizen.wallet.balance >= currentChargePerRequest) {
-      await SimRegistration.update({ nin: citizen.nin });
+    if (citizen.wallet.balance < currentChargePerRequest) {
       await RequestReport.create({
         nin,
         phoneNumber,
-        status: "success",
-        amountBilled: currentChargePerRequest,
-        remark: reportRemarks[0],
+        status: "fail",
+        amountBilled: 0,
+        remark: reportRemarks[4],
       });
       return responseObject(
         res,
-        200,
-        "success",
-        null,
-        "Congratulations! You have successfully linked your phone number to your NIN"
-      );
-    } else {
-      await RequestReport.create({
-        nin,
-        phoneNumber,
-        status: "success",
-        amountBilled: currentChargePerRequest,
-        remark: reportRemarks[0],
-      });
-      return responseObject(
-        res,
-        403,
+        402,
         "error",
         null,
-        "You do not have sufficient balance to make this request. Please credit your wallet."
+        `You do not have sufficient balance to make this request. You need up to N${currentChargePerRequest} in your wallet, you current balance is ${citizen.wallet.balance}  Please credit your wallet.`
       );
     }
+    await SimRegistration.update(
+      { nin: citizen.nin },
+      {
+        where: {
+          phoneNumber: phoneNumber,
+          nin: null || "",
+        },
+      }
+    );
+    await Wallet.update(
+      {
+        balance: citizen.wallet.balance - currentChargePerRequest,
+      },
+      {
+        where: {
+          citizenId: citizen.id,
+        },
+      }
+    );
+    await RequestReport.create({
+      nin,
+      phoneNumber,
+      status: "success",
+      amountBilled: currentChargePerRequest,
+      remark: reportRemarks[0],
+    });
+    return responseObject(
+      res,
+      202,
+      "success",
+      null,
+      "Congratulations! You have successfully linked your phone number to your NIN"
+    );
   } catch (err) {
     return responseObject(res, 500, "error", null, err.message);
   }
@@ -149,13 +193,13 @@ export const linkPhoneToNin = async (req, res) => {
 
 export const getRequestReports = async (req, res) => {
   try {
-    const reports = await RequestReport.findAll();
+    const reports = await RequestReport.findAll({ limit: 50, offset: 0 });
 
     const data = {
       reports: reports,
       statistics: {
-        totalAmountBilled: "4000",
-        totalUsersBalance: "5000",
+        totalAmountBilled: await RequestReport.sum("amountBilled"),
+        totalUsersBalance: await Wallet.sum("balance"),
       },
     };
 

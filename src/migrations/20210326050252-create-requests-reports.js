@@ -10,7 +10,7 @@ module.exports = {
       },
       nin: {
         allowNull: false,
-        type: Sequelize.INTEGER,
+        type: Sequelize.STRING,
       },
       phoneNumber: {
         allowNull: false,

@@ -21,7 +21,7 @@ module.exports = {
         allowNull: false,
       },
       gender: {
-        type: Sequelize.STRING,
+        type: Sequelize.ENUM("M", "F"),
         allowNull: false,
       },
       dob: {
@@ -38,14 +38,8 @@ module.exports = {
         unique: true,
       },
       nin: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.STRING,
         allowNull: true,
-        references: {
-          model: "CitizensNins",
-          key: "nin",
-        },
-        onUpdate: "CASCADE",
-        onDelete: "SET NULL",
       },
       createdAt: {
         allowNull: false,

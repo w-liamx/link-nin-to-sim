@@ -2,8 +2,8 @@ import db from "../models/index.js";
 import { random, responseObject } from "../helpers/utils.js";
 
 const Citizen = db.CitizensNin;
-// const Wallet = db.Wallet;
-const SystemSettings = db.SystemSettings;
+const Wallet = db.Wallet;
+const SystemSettings = db.SystemSetting;
 
 // "This Citizen already exists in the database. Please ensure that the NIN you have provided belongs to you, or report to the authorities if you think you are being impersonated."
 
@@ -15,7 +15,8 @@ export const createCitizen = async (req, res) => {
     const trackingId = random(12);
 
     // Generate 11 digits number that will make the user's NIN
-    let nin = Math.random() * 100000000000 + 1;
+    let nanId = Math.random() * 100000000000 + 1;
+    let nin = Math.floor(nanId).toString();
 
     /** Assuming we have control over citizen's NIN registration portal,
      * We can create a wallet in our system for every new citizen
@@ -29,40 +30,32 @@ export const createCitizen = async (req, res) => {
     });
     const initialBalance = balanceSetting.value;
 
-    const newCitizen = await Citizen.create(
-      {
-        firstName,
-        middleName,
-        lastName,
-        gender,
-        trackingId,
-        nin,
-        Wallet: {
-          balance: initialBalance,
+    const newCitizen = await Citizen.create({
+      firstName,
+      middleName,
+      lastName,
+      gender,
+      trackingId,
+      nin,
+    });
+
+    await Wallet.create({
+      citizenId: newCitizen.id,
+      balance: initialBalance,
+    });
+
+    const user = await Citizen.findOne({
+      where: { id: newCitizen.id },
+      include: [
+        {
+          model: Wallet,
+          as: "wallet",
+          attributes: ["balance"],
         },
-      },
-      {
-        include: [Wallet],
-      }
-    );
+      ],
+    });
 
-    // await Wallet.create({
-    //   nin: newCitizen.nin,
-    //   balance: initialBalance,
-    // });
-
-    // const user = Citizen.findOne({
-    //   where: { nin: newCitizen.nin },
-    //   include: [
-    //     {
-    //       model: Wallet,
-    //       as: "wallet",
-    //       attributes: ["balance"],
-    //     },
-    //   ],
-    // });
-
-    return responseObject(res, 201, "success", newCitizen);
+    return responseObject(res, 201, "success", user);
   } catch (err) {
     return responseObject(res, 500, "error", null, err.message);
   }

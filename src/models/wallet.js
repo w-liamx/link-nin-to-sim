@@ -13,7 +13,7 @@ module.exports = (sequelize, DataTypes) => {
         onDelete: "CASCADE",
         hooks: true,
         foreignKey: {
-          name: "nin",
+          name: "id",
           allowNull: false,
         },
       });
@@ -21,7 +21,7 @@ module.exports = (sequelize, DataTypes) => {
   }
   Wallet.init(
     {
-      nin: {
+      citizenId: {
         allowNull: false,
         type: DataTypes.INTEGER,
       },

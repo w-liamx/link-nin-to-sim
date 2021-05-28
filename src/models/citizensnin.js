@@ -14,7 +14,7 @@ module.exports = (sequelize, DataTypes) => {
         onDelete: "CASCADE",
         hooks: true,
         foreignKey: {
-          name: "nin",
+          name: "citizenId",
           allowNull: false,
         },
       });
@@ -43,8 +43,7 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
       },
       nin: {
-        type: DataTypes.INTEGER,
-        primaryKey: true,
+        type: DataTypes.STRING,
         unique: true,
         allowNull: false,
       },

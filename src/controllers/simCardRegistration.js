@@ -86,7 +86,7 @@ export const getAllUsers = async (_req, res) => {
 export const getSingleUser = async (req, res) => {
   try {
     const { phoneNumber } = req.params;
-    const user = await CitizensNin.findOne({ where: { phoneNumber } });
+    const user = await SimRegistration.findOne({ where: { phoneNumber } });
 
     if (!user) {
       return responseObject(

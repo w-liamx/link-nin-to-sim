@@ -21,7 +21,7 @@ module.exports = {
         allowNull: false,
       },
       gender: {
-        type: Sequelize.STRING,
+        type: Sequelize.ENUM("M", "F"),
         allowNull: false,
       },
       trackingId: {
@@ -29,8 +29,7 @@ module.exports = {
         allowNull: false,
       },
       nin: {
-        type: Sequelize.INTEGER,
-        primaryKey: true,
+        type: Sequelize.STRING,
         unique: true,
         allowNull: false,
       },
