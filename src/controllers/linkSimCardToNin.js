@@ -1,5 +1,6 @@
 import db from "../models/index.js";
 import { responseObject } from "../helpers/utils.js";
+import { validatePhoneNumber, validateNIN } from "../helpers/validators.js";
 
 const SimRegistration = db.SimRegistration;
 const Wallet = db.Wallet;
@@ -19,6 +20,21 @@ const reportRemarks = [
 export const linkPhoneToNin = async (req, res) => {
   try {
     const { phoneNumber, nin } = req.body;
+
+    // Check if provided phone number is valid
+    if (!validatePhoneNumber(phoneNumber))
+      return responseObject(res, 400, "error", null, "Invalid Phone number");
+
+    // Check if provided NIN is valid
+    if (!validateNIN(nin))
+      return responseObject(res, 400, "error", null, "Invalid NIN");
+
+    // Convert phone number with country code to local phone number to protect database integrity
+    let phone = phoneNumber;
+    if (phoneNumber.substring(0, 4) === "+234")
+      phone = phoneNumber.substring(4).replace(/^/, "0");
+    if (phoneNumber.substring(0, 3) === "234")
+      phone = phoneNumber.substring(3).replace(/^/, "0");
 
     /**
      *To successfully link NIN to Phone Number, User Must Provide A Valid Phone Number
@@ -49,10 +65,11 @@ export const linkPhoneToNin = async (req, res) => {
         "Both fields are required! Please provide your phone number and NIN."
       );
     const sim = await SimRegistration.findOne({
-      where: { phoneNumber },
+      where: { phoneNumber: phone },
     });
 
     // Return response messages if phone number is already linked to NIN
+    // This only shows a message suggesting to the user to contact support. The administrators should then ask user to verify his/her account so that the record can be updated.
     if (sim && sim.nin) {
       await RequestReport.create({
         nin,
@@ -66,7 +83,7 @@ export const linkPhoneToNin = async (req, res) => {
         403,
         "error",
         null,
-        "This Phone number has already been Linked to an NIN. Please contact support if you did not do this."
+        "This Phone number has already been Linked to an NIN. Please contact support if you did not do this yourself."
       );
     }
 
@@ -82,7 +99,7 @@ export const linkPhoneToNin = async (req, res) => {
       ],
     });
 
-    // Return response messages if user's inputs are invalid
+    // Return corresponding response messages if user's inputs are invalid
     if (!sim && !citizen) {
       await RequestReport.create({
         nin,
@@ -130,7 +147,7 @@ export const linkPhoneToNin = async (req, res) => {
       );
     }
 
-    // Get the current charge per request. Use default of N500 if setting is not found.
+    // If User's inputs are valid, Get the current charge per request. Use default of N500 if setting is not found.
     const chargeSetting = await SystemSettings.findOne({
       where: { key: "chargePerRequest" },
     });
@@ -150,14 +167,14 @@ export const linkPhoneToNin = async (req, res) => {
         402,
         "error",
         null,
-        `You do not have sufficient balance to make this request. You need up to N${currentChargePerRequest} in your wallet, you current balance is ${citizen.wallet.balance}  Please credit your wallet.`
+        `You do not have sufficient balance to make this request. You need up to N${currentChargePerRequest} in your wallet, your current balance is N${citizen.wallet.balance}. Please credit your wallet.`
       );
     }
     await SimRegistration.update(
       { nin: citizen.nin },
       {
         where: {
-          phoneNumber: phoneNumber,
+          phoneNumber: phone,
           nin: null || "",
         },
       }

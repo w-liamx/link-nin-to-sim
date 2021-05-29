@@ -1,15 +1,24 @@
 import db from "../models/index.js";
 import { random, responseObject } from "../helpers/utils.js";
+import { validateGender } from "../helpers/validators.js";
+import { genderDict } from "../helpers/constants.js";
 
 const Citizen = db.CitizensNin;
 const Wallet = db.Wallet;
 const SystemSettings = db.SystemSetting;
 
-// "This Citizen already exists in the database. Please ensure that the NIN you have provided belongs to you, or report to the authorities if you think you are being impersonated."
-
 export const createCitizen = async (req, res) => {
   try {
     const { firstName, middleName, lastName, gender } = req.body;
+
+    if (!validateGender(gender))
+      return responseObject(
+        res,
+        400,
+        "error",
+        null,
+        `Unaccepted Gender value. Please select one of ${genderDict}`
+      );
 
     // Generate a 12 chars string that will make the tracking Id for this user
     const trackingId = random(12);
@@ -24,38 +33,37 @@ export const createCitizen = async (req, res) => {
      * for using our service. (Linking phone number to NIN)
      */
 
-    // Get users initial/starting balance from System Settings (in the database)
-    const balanceSetting = await SystemSettings.findOne({
-      where: { key: "usersStartingBalance" },
-    });
-    const initialBalance = balanceSetting.value;
-
-    const newCitizen = await Citizen.create({
+    await Citizen.create({
       firstName,
       middleName,
       lastName,
       gender,
       trackingId,
       nin,
-    });
+    }).then(async (citizen) => {
+      // Get users initial/starting balance from System Settings (in the database)
+      const balanceSetting = await SystemSettings.findOne({
+        where: { key: "usersStartingBalance" },
+      });
+      const initialBalance = balanceSetting.value;
 
-    await Wallet.create({
-      citizenId: newCitizen.id,
-      balance: initialBalance,
-    });
+      await Wallet.create({
+        citizenId: citizen.id,
+        balance: initialBalance,
+      });
+      const user = await Citizen.findOne({
+        where: { id: citizen.id },
+        include: [
+          {
+            model: Wallet,
+            as: "wallet",
+            attributes: ["balance"],
+          },
+        ],
+      });
 
-    const user = await Citizen.findOne({
-      where: { id: newCitizen.id },
-      include: [
-        {
-          model: Wallet,
-          as: "wallet",
-          attributes: ["balance"],
-        },
-      ],
+      return responseObject(res, 201, "success", user);
     });
-
-    return responseObject(res, 201, "success", user);
   } catch (err) {
     return responseObject(res, 500, "error", null, err.message);
   }

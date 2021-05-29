@@ -55,12 +55,12 @@ const router = express.Router();
  * @swagger
  */
 router.post("/sim-registration/create", registerSim);
-router.put("/sim-registration/:phoneNumber/update", updateSimCardRegistration);
+// router.put("/sim-registration/:phoneNumber/update", updateSimCardRegistration);
 router.get("/sim-users/:phoneNumber", getSingleUser);
 router.get("/sim-users", getAllUsers);
 
 router.post("/nin-registration/create", createCitizen);
-router.put("/nin-registration/:nin/update", updateCitizenRecord);
+// router.put("/nin-registration/:nin/update", updateCitizenRecord);
 router.get("/citizens/:nin", getSingleCitizen);
 router.get("/citizens", getAllCitizens);
 
