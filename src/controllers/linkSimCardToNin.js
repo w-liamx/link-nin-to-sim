@@ -169,17 +169,17 @@ export const linkPhoneToNin = async (req, res) => {
         null,
         `You do not have sufficient balance to make this request. You need up to N${currentChargePerRequest} in your wallet, your current balance is N${citizen.wallet.balance}. Please credit your wallet.`
       );
-    }
-    await SimRegistration.update(
+    } else {
+      console.log(citizen)
+        await SimRegistration.update(
       { nin: citizen.nin },
       {
         where: {
           phoneNumber: phone,
-          nin: null || "",
         },
       }
-    );
-    await Wallet.update(
+    ).then(async ()=>{
+      await Wallet.update(
       {
         balance: citizen.wallet.balance - currentChargePerRequest,
       },
@@ -189,20 +189,24 @@ export const linkPhoneToNin = async (req, res) => {
         },
       }
     );
-    await RequestReport.create({
+    }).then(async ()=>{
+      await RequestReport.create({
       nin,
       phoneNumber,
       status: "success",
       amountBilled: currentChargePerRequest,
       remark: reportRemarks[0],
     });
-    return responseObject(
+      return responseObject(
       res,
       202,
       "success",
       null,
       "Congratulations! You have successfully linked your phone number to your NIN"
     );
+    })
+    }
+    
   } catch (err) {
     return responseObject(res, 500, "error", null, err.message);
   }

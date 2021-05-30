@@ -17,7 +17,7 @@ describe("Sim Registration APIs", () => {
         firstName: "Williams",
         middleName: "",
         lastName: "Afiuwka",
-        phoneNumber: "07041211447",
+        phoneNumber: "07041211449",
         serviceProvider: "MTN",
         gender: "M",
         dob: "10-03-1990",
@@ -137,7 +137,7 @@ describe("Sim Registration APIs", () => {
   });
 
   describe("POST /api/sim-registration/create", () => {
-    it("Test sim card registration with an invalid phone number 3 - input: '0905762456p'", (done) => {
+    it("Test sim card registration with an invalid phone number 4 - input: '0905762456p'", (done) => {
       const user = {
         firstName: "Williams",
         middleName: "",

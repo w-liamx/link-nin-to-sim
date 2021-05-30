@@ -13,17 +13,16 @@ describe("Link NIN to SIM - APIs", () => {
     it("Link NIN to SIM with valid details", (done) => {
       const data = {
         phoneNumber: "07041211447",
-        nin: "31575224125",
+        nin: "93056152233",
       };
       chai
         .request(serverUrl)
         .post("/api/phone-to-nin")
         .send(data)
         .end((err, res) => {
-          res.should.have.status(201);
+          res.should.have.status(202);
           res.body.status.should.be.eq("success");
-          res.body.should.have.property("data");
-          res.body.data.should.be.a("object");
+          res.body.should.have.property("message");
           done();
         });
     });
@@ -33,7 +32,7 @@ describe("Link NIN to SIM - APIs", () => {
     it("Test an already linked phone number", (done) => {
       const data = {
         phoneNumber: "07041211447",
-        nin: "31575224125",
+        nin: "93056152233",
       };
       chai
         .request(serverUrl)
@@ -56,7 +55,7 @@ describe("Link NIN to SIM - APIs", () => {
     it("Test: User submitted an invalid phone number 1 - input: '02045434333'", (done) => {
       const data = {
         phoneNumber: "02045434333",
-        nin: "31575224125",
+        nin: "93056152233",
       };
       chai
         .request(serverUrl)
@@ -75,7 +74,7 @@ describe("Link NIN to SIM - APIs", () => {
     it("Test: User submitted an invalid phone number 2 - input: '08045434333566444'", (done) => {
       const data = {
         phoneNumber: "08045434333566444",
-        nin: "31575224125",
+        nin: "93056152233",
       };
       chai
         .request(serverUrl)
@@ -94,7 +93,7 @@ describe("Link NIN to SIM - APIs", () => {
     it("Test: User submitted an invalid phone number 3 - input: '+23445434333566444'", (done) => {
       const data = {
         phoneNumber: "+23445434333566444",
-        nin: "31575224125",
+        nin: "93056152233",
       };
       chai
         .request(serverUrl)
@@ -113,7 +112,7 @@ describe("Link NIN to SIM - APIs", () => {
     it("Test: User submitted an invalid phone number 3 - input: '0905762456p'", (done) => {
       const data = {
         phoneNumber: "0905762456p",
-        nin: "31575224125",
+        nin: "93056152233",
       };
       chai
         .request(serverUrl)
@@ -167,32 +166,10 @@ describe("Link NIN to SIM - APIs", () => {
   });
 
   describe("POST /api/phone-to-nin", () => {
-    it("Test: User provided only 1 of 2 required inputs - either phone number or NIN", (done) => {
-      const data = {
-        phoneNumber: "07041211447",
-      };
-      chai
-        .request(serverUrl)
-        .post("/api/phone-to-nin")
-        .send(data)
-        .end((err, res) => {
-          res.should.have.status(400);
-          res.body.status.should.be.eq("error");
-          res.body.should.have
-            .property("message")
-            .eq(
-              "Both fields are required! Please provide your phone number and NIN."
-            );
-          done();
-        });
-    });
-  });
-
-  describe("POST /api/phone-to-nin", () => {
     it("Test: User provided un-registered phone number", (done) => {
       const data = {
         phoneNumber: "07041311443",
-        nin: "31575224125",
+        nin: "93056152233",
       };
       chai
         .request(serverUrl)
