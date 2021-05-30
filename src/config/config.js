@@ -6,6 +6,7 @@ module.exports = {
     database: process.env.dbName || "",
     host: process.env.dbHost || "",
     dialect: process.env.dialect || "",
+    logging: false,
   },
   test: {
     username: "root",

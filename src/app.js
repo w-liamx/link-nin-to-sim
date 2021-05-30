@@ -19,4 +19,8 @@ app.get("/", (req, res) => {
   res.send("Welcome to the NIN to SIM linking portal...");
 });
 
-app.listen(PORT, () => console.log(`Server started at port ${PORT}`));
+export default app.listen(PORT, () =>
+  console.log(`Server started at port ${PORT}`)
+);
+
+// export default app;

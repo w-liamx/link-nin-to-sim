@@ -83,7 +83,7 @@ export const linkPhoneToNin = async (req, res) => {
         403,
         "error",
         null,
-        "This Phone number has already been Linked to an NIN. Please contact support if you did not do this yourself."
+        "This Phone number has already been Linked to an NIN. Please contact support if you are not aware of this linking."
       );
     }
 
