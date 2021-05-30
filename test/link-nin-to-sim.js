@@ -1,6 +1,14 @@
 const chai = require("chai");
 const chaiHttp = require("chai-http");
+const db = require("../src/models")
 require("../src/app");
+
+
+const SimRegistration = db.SimRegistration;
+const Wallet = db.Wallet;
+const Citizen = db.CitizensNin;
+const RequestReport = db.RequestsReport;
+const SystemSettings = db.SystemSetting;
 
 chai.should();
 
@@ -191,7 +199,7 @@ describe("Link NIN to SIM - APIs", () => {
   describe("POST /api/phone-to-nin", () => {
     it("Test: User provided incorrect NIN", (done) => {
       const data = {
-        phoneNumber: "07041211447",
+        phoneNumber: "07011111111",
         nin: "66677788899",
       };
       chai

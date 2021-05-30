@@ -170,7 +170,6 @@ export const linkPhoneToNin = async (req, res) => {
         `You do not have sufficient balance to make this request. You need up to N${currentChargePerRequest} in your wallet, your current balance is N${citizen.wallet.balance}. Please credit your wallet.`
       );
     } else {
-      console.log(citizen)
         await SimRegistration.update(
       { nin: citizen.nin },
       {

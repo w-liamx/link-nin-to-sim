@@ -13,11 +13,12 @@ const serverUrl = "http://localhost:5000";
 describe("Sim Registration APIs", () => {
   describe("POST /api/sim-registration/create", () => {
     it("Register a new sim card with valid details", (done) => {
+      const phone = "080" + Math.floor(Math.random() * 1000000000).toString().substring(0, 8)
       const user = {
         firstName: "Williams",
         middleName: "",
         lastName: "Afiuwka",
-        phoneNumber: "07041211449",
+        phoneNumber: phone,
         serviceProvider: "MTN",
         gender: "M",
         dob: "10-03-1990",
