@@ -1,14 +1,7 @@
 const chai = require("chai");
 const chaiHttp = require("chai-http");
-const db = require("../src/models")
+const db = require("../src/models");
 require("../src/app");
-
-
-const SimRegistration = db.SimRegistration;
-const Wallet = db.Wallet;
-const Citizen = db.CitizensNin;
-const RequestReport = db.RequestsReport;
-const SystemSettings = db.SystemSetting;
 
 chai.should();
 
@@ -16,12 +9,67 @@ chai.use(chaiHttp);
 
 const serverUrl = "http://localhost:5000";
 
+let citizen = {};
+let simCard = {};
+
 describe("Link NIN to SIM - APIs", () => {
   describe("POST /api/phone-to-nin", () => {
+    before((done) => {
+      const user = {
+        firstName: "Williams",
+        middleName: "",
+        lastName: "Afiuwka",
+        gender: "M",
+      };
+      chai
+        .request(serverUrl)
+        .post("/api/nin-registration/create")
+        .send(user)
+        .end((err, res) => {
+          citizen = res.body.data;
+          res.should.have.status(201);
+          res.body.status.should.be.eq("success");
+          res.body.should.have.property("data");
+          res.body.data.should.be.a("object");
+          res.body.data.should.have.property("trackingId");
+          res.body.data.should.have.property("nin");
+          res.body.data.should.have.property("wallet");
+          done();
+        });
+    });
+    before((done) => {
+      const phone =
+        "080" +
+        Math.floor(Math.random() * 1000000000)
+          .toString()
+          .substring(0, 8);
+      const user = {
+        firstName: "Williams",
+        middleName: "",
+        lastName: "Afiuwka",
+        phoneNumber: phone,
+        serviceProvider: "MTN",
+        gender: "M",
+        dob: "10-03-1990",
+      };
+      chai
+        .request(serverUrl)
+        .post("/api/sim-registration/create")
+        .send(user)
+        .end((err, res) => {
+          console.log(res.body.data);
+          simCard = res.body.data;
+          res.should.have.status(201);
+          res.body.status.should.be.eq("success");
+          res.body.should.have.property("data");
+          res.body.data.should.be.a("object");
+          done();
+        });
+    });
     it("Link NIN to SIM with valid details", (done) => {
       const data = {
-        phoneNumber: "07041211447",
-        nin: "93056152233",
+        phoneNumber: simCard.phoneNumber && simCard.phoneNumber,
+        nin: citizen.nin && citizen.nin,
       };
       chai
         .request(serverUrl)
@@ -39,8 +87,8 @@ describe("Link NIN to SIM - APIs", () => {
   describe("POST /api/phone-to-nin", () => {
     it("Test an already linked phone number", (done) => {
       const data = {
-        phoneNumber: "07041211447",
-        nin: "93056152233",
+        phoneNumber: simCard.phoneNumber && simCard.phoneNumber,
+        nin: citizen.nin && citizen.nin,
       };
       chai
         .request(serverUrl)
@@ -177,7 +225,7 @@ describe("Link NIN to SIM - APIs", () => {
     it("Test: User provided un-registered phone number", (done) => {
       const data = {
         phoneNumber: "07041311443",
-        nin: "93056152233",
+        nin: citizen.nin && citizen.nin,
       };
       chai
         .request(serverUrl)
@@ -197,9 +245,38 @@ describe("Link NIN to SIM - APIs", () => {
   });
 
   describe("POST /api/phone-to-nin", () => {
+    let sim2;
+    before((done) => {
+      const phone =
+        "080" +
+        Math.floor(Math.random() * 1000000000)
+          .toString()
+          .substring(0, 8);
+      const user = {
+        firstName: "Williams",
+        middleName: "",
+        lastName: "Afiuwka",
+        phoneNumber: phone,
+        serviceProvider: "MTN",
+        gender: "M",
+        dob: "10-03-1990",
+      };
+      chai
+        .request(serverUrl)
+        .post("/api/sim-registration/create")
+        .send(user)
+        .end((err, res) => {
+          sim2 = res.body.data;
+          res.should.have.status(201);
+          res.body.status.should.be.eq("success");
+          res.body.should.have.property("data");
+          res.body.data.should.be.a("object");
+          done();
+        });
+    });
     it("Test: User provided incorrect NIN", (done) => {
       const data = {
-        phoneNumber: "07011111111",
+        phoneNumber: sim2.phoneNumber && sim2.phoneNumber,
         nin: "66677788899",
       };
       chai

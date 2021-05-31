@@ -13,7 +13,11 @@ const serverUrl = "http://localhost:5000";
 describe("Sim Registration APIs", () => {
   describe("POST /api/sim-registration/create", () => {
     it("Register a new sim card with valid details", (done) => {
-      const phone = "080" + Math.floor(Math.random() * 1000000000).toString().substring(0, 8)
+      const phone =
+        "080" +
+        Math.floor(Math.random() * 1000000000)
+          .toString()
+          .substring(0, 8);
       const user = {
         firstName: "Williams",
         middleName: "",
@@ -38,12 +42,41 @@ describe("Sim Registration APIs", () => {
   });
 
   describe("POST /api/sim-registration/create", () => {
+    let simCard;
+    before((done) => {
+      const phone =
+        "080" +
+        Math.floor(Math.random() * 1000000000)
+          .toString()
+          .substring(0, 8);
+      const user = {
+        firstName: "Williams",
+        middleName: "",
+        lastName: "Afiuwka",
+        phoneNumber: phone,
+        serviceProvider: "MTN",
+        gender: "M",
+        dob: "10-03-1990",
+      };
+      chai
+        .request(serverUrl)
+        .post("/api/sim-registration/create")
+        .send(user)
+        .end((err, res) => {
+          simCard = res.body.data;
+          res.should.have.status(201);
+          res.body.status.should.be.eq("success");
+          res.body.should.have.property("data");
+          res.body.data.should.be.a("object");
+          done();
+        });
+    });
     it("Test an already registered phone number", (done) => {
       const user = {
         firstName: "Williams",
         middleName: "",
         lastName: "Afiuwka",
-        phoneNumber: "07041211447",
+        phoneNumber: simCard.phoneNumber && simCard.phoneNumber,
         serviceProvider: "MTN",
         gender: "M",
         dob: "10-03-1990",
