@@ -23,7 +23,7 @@ _This repository contains a mock up Nodejs Project that implements APIs for link
 3. run `npm install`
 4. start your mySQL service if it is not already running.
 5. create a database schema "example_db"
-6. create `.evv` file in the root directory to store your environment variables
+6. create `.env` file in the root directory to store your environment variables
 7. setup your `.env` as follows.
 
    ```
@@ -37,6 +37,9 @@ _This repository contains a mock up Nodejs Project that implements APIs for link
 8. run `npx sequelize-cli db:migrate`
 9. run `npx sequelize-cli db:seed:all`
 10. run `npm run dev` for development server or `npm start` for production
+
+#### Tests
+- run `npm run test` on the root directory
 
 ### Dependencies
 
